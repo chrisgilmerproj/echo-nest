@@ -5,15 +5,26 @@ import time
 from amazon_echo import Echo
 import nest
 from nest import utils as nest_utils
-import wolframalpha
 
 from secrets import *  # nopep8
-
 
 scheduler = sched.scheduler(time.time, time.sleep)
 echo = Echo(echo_username, echo_password)
 napi = nest.Nest(nest_username, nest_password)
-wa_client = wolframalpha.Client(wolframalpha_app_id)
+
+# Only allow temps between 50 - 79 degrees
+ones_dict = {'one': 1,
+             'two': 2,
+             'three': 3,
+             'four': 4,
+             'five': 5,
+             'six': 6,
+             'seven': 7,
+             'eight': 8,
+             'nine': 9}
+tens_dict = {'fifty': 50,
+             'sixty': 60,
+             'seventy': 70}
 
 
 def set_temp(napi, temp):
@@ -44,13 +55,20 @@ def main(scheduler):
             napi.structures[0].away = False
             print("Setting Nest to home mode")
         else:
-            temp_regex = re.compile(r'^set temperature (\w+\s*\w+)+ degrees$')
+            regex = r'^set temperature (?:to )?((\w+)\s+(\w+)*)\s*degrees$'
+            temp_regex = re.compile(regex)
             m = temp_regex.match(todo)
             if m:
-                spoken_temp = m.group(1)
-                res = wa_client.query(spoken_temp)
-                temp = int(res.pods[0].text)
-                set_temp(napi, temp)
+                temp_spoken = m.group(1)
+                temp_tens = m.group(2)
+                temp_ones = m.group(3)
+                temp = tens_dict.get(temp_tens, None)
+                if temp:
+                    if temp_ones:
+                        temp += ones_dict.get(temp_ones, 0)
+                    set_temp(napi, temp)
+                else:
+                    print("Cannot set temperature to '{}' degrees".format(temp_spoken))  # nopep8
 
     scheduler.enter(5, 1, main, (scheduler,))
 
