@@ -12,6 +12,8 @@ scheduler = sched.scheduler(time.time, time.sleep)
 echo = Echo(echo_username, echo_password)
 napi = nest.Nest(nest_username, nest_password)
 
+TEMP_REGEX = r'^(?:set )?(?:the )?(?:temperature )?(?:to )?((\w+)\s+(\w+)*)\s*degrees$'  # nopep8
+
 # Only allow temps between 50 - 79 degrees
 ones_dict = {'one': 1,
              'two': 2,
@@ -37,6 +39,22 @@ def set_temp(napi, temp):
         print("Setting nest temp to {} degrees".format(f_temp))
 
 
+def convert_temp(m):
+    """
+    Convert a matched re phrase to an integer
+    """
+    temp_spoken = m.group(1)
+    temp_tens = m.group(2)
+    temp_ones = m.group(3)
+    temp = tens_dict.get(temp_tens, None)
+    if temp:
+        if temp_ones:
+            temp += ones_dict.get(temp_ones, 0)
+    else:
+        print("Cannot set temperature to '{}' degrees".format(temp_spoken))  # nopep8
+    return temp
+
+
 def main(scheduler):
     """
     Get the last todo item and determine if Nest
@@ -55,20 +73,12 @@ def main(scheduler):
             napi.structures[0].away = False
             print("Setting Nest to home mode")
         else:
-            regex = r'^set temperature (?:to )?((\w+)\s+(\w+)*)\s*degrees$'
-            temp_regex = re.compile(regex)
+            temp_regex = re.compile(TEMP_REGEX)
             m = temp_regex.match(todo)
             if m:
-                temp_spoken = m.group(1)
-                temp_tens = m.group(2)
-                temp_ones = m.group(3)
-                temp = tens_dict.get(temp_tens, None)
+                temp = convert_temp(m)
                 if temp:
-                    if temp_ones:
-                        temp += ones_dict.get(temp_ones, 0)
                     set_temp(napi, temp)
-                else:
-                    print("Cannot set temperature to '{}' degrees".format(temp_spoken))  # nopep8
 
     scheduler.enter(5, 1, main, (scheduler,))
 
