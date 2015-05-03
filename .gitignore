@@ -1,5 +1,5 @@
 secrets.py
 env/
 *.pyc
-*.swp
-nest.config
+*.sw[o|p]
+nest.conf
