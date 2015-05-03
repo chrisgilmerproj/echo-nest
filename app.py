@@ -74,9 +74,9 @@ def main(scheduler):
             print("Setting Nest to home mode")
         else:
             temp_regex = re.compile(TEMP_REGEX)
-            m = temp_regex.match(todo)
-            if m:
-                temp = convert_temp(m)
+            m_temp = temp_regex.match(todo)
+            if m_temp:
+                temp = convert_temp(m_temp)
                 if temp:
                     set_temp(napi, temp)
 
