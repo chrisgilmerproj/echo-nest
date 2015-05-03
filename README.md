@@ -22,11 +22,6 @@ $ source env/bin/activate
 (env) $ pip install -r requirements.txt
 ```
 
-Wolfram Alpha Key
----
-
-[Get key here](https://developer.wolframalpha.com/portal/apisignup.html]
-
 
 FreeBSD Setup
 ---
