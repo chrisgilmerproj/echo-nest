@@ -5,14 +5,17 @@ import time
 from amazon_echo import Echo
 import nest
 from nest import utils as nest_utils
-
+import pychromecast
+from pychromecast.controllers.media import MediaController
 from secrets import *  # nopep8
 
 scheduler = sched.scheduler(time.time, time.sleep)
 echo = Echo(echo_username, echo_password)
 napi = nest.Nest(nest_username, nest_password)
 
+# Constants
 TEMP_REGEX = r'^(?:set )?(?:the )?(?:temperature )?(?:to )?((\w+)\s+(\w+)*)\s*degrees$'  # nopep8
+CAST_REGEX = r'^(?:turn )?(?:on )?(?:the )?(television|tv|chromecast)$'  # nopep8
 
 # Only allow temps between 50 - 79 degrees
 ones_dict = {'one': 1,
@@ -55,6 +58,22 @@ def convert_temp(m):
     return temp
 
 
+def enable_chromecast():
+    """
+    Turn on the chromecast
+    """
+    cast_name = "Library"
+    print("Turning on the '{}' chromecast".format(cast_name))
+    cast = pychromecast.get_chromecast(friendly_name=cast_name)
+    media = MediaController()
+    cast.register_handler(media)
+    time.sleep(1)
+    print("Attempting to play media")
+    media.play_media('http://upload.wikimedia.org/wikipedia/commons/7/7f/Pug_portrait.jpg', 'jpg')  # nopep8
+    time.sleep(30)
+    cast.quit_app()
+
+
 def main(scheduler):
     """
     Get the last todo item and determine if Nest
@@ -74,11 +93,15 @@ def main(scheduler):
             print("Setting Nest to home mode")
         else:
             temp_regex = re.compile(TEMP_REGEX)
+            cast_regex = re.compile(CAST_REGEX)
             m_temp = temp_regex.match(todo)
+            m_cast = cast_regex.match(todo)
             if m_temp:
                 temp = convert_temp(m_temp)
                 if temp:
                     set_temp(napi, temp)
+            elif m_cast:
+                enable_chromecast()
 
     scheduler.enter(5, 1, main, (scheduler,))
 
