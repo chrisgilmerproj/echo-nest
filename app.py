@@ -6,6 +6,7 @@ from amazon_echo import Echo
 import nest
 from nest import utils as nest_utils
 import pychromecast
+from pychromecast import Chromecast
 from pychromecast.controllers.media import MediaController
 from secrets import *  # nopep8
 
@@ -62,16 +63,17 @@ def enable_chromecast():
     """
     Turn on the chromecast
     """
-    cast_name = "Library"
+    cast = Chromecast('192.168.1.104')
+    cast_name = cast.device.friendly_name
     print("Turning on the '{}' chromecast".format(cast_name))
-    cast = pychromecast.get_chromecast(friendly_name=cast_name)
-    media = MediaController()
-    cast.register_handler(media)
-    time.sleep(1)
-    print("Attempting to play media")
-    media.play_media('http://upload.wikimedia.org/wikipedia/commons/7/7f/Pug_portrait.jpg', 'jpg')  # nopep8
-    time.sleep(30)
-    cast.quit_app()
+    if cast:
+        media = MediaController()
+        cast.register_handler(media)
+        time.sleep(1)
+        print("Attempting to play media")
+        media.play_media('http://upload.wikimedia.org/wikipedia/commons/7/7f/Pug_portrait.jpg', 'jpg')  # nopep8
+        time.sleep(30)
+        cast.quit_app()
 
 
 def main(scheduler):
