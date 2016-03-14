@@ -51,3 +51,11 @@ $ source env/bin/activate
 (env) $ python app.py
 (env) $ Ctrl + a + d
 ```
+
+To reconnect to the box later:
+
+```
+# jls
+# jexec 3 /usr/local/bin/bash
+# screen -r
+```
